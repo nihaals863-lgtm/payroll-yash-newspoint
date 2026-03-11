@@ -10,7 +10,7 @@ const register = async (req, res, next) => {
   const connection = await db.getConnection();
   await connection.beginTransaction();
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     // Validate input
     if (!name || !email || !password) {
@@ -58,18 +58,29 @@ const register = async (req, res, next) => {
     // Create role-specific records
     if (userRole === 'employer') {
       await connection.query(
-        `INSERT INTO companies (user_id, company_name, status, created_at, updated_at)
+        `INSERT INTO employers (user_id, company_name, status, created_at, updated_at)
          VALUES (?, ?, 'active', NOW(), NOW())`,
         [userId, `${name}'s Company`]
       );
+    } else if (userRole === 'employee') {
+      await connection.query(
+        `INSERT INTO employees (user_id, status, created_at, updated_at)
+         VALUES (?, 'active', NOW(), NOW())`,
+        [userId]
+      );
     } else if (userRole === 'vendor') {
       await connection.query(
-        `INSERT INTO vendors (user_id, company_name, payment_status, created_at, updated_at)
-         VALUES (?, ?, 'pending', NOW(), NOW())`,
+        `INSERT INTO vendors (user_id, company_name, payment_status, status, created_at, updated_at)
+         VALUES (?, ?, 'pending', 'active', NOW(), NOW())`,
         [userId, `${name}'s Vendor Company`]
       );
+    } else if (userRole === 'jobseeker') {
+      await connection.query(
+        `INSERT INTO job_seekers (user_id, name, email, phone, status, created_at, updated_at)
+         VALUES (?, ?, ?, ?, 'active', NOW(), NOW())`,
+        [userId, name, email, phone]
+      );
     }
-    // Employee record created later upon assignment
 
     await connection.commit();
 
@@ -361,6 +372,20 @@ const changePassword = async (req, res, next) => {
   }
 };
 
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    // For now, since backend email is not fully set up, we just return success
+    // This allows the frontend to show the "Reset link sent" message
+    res.json({
+      success: true,
+      message: 'If an account exists with this email, a reset link will be sent.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -368,4 +393,5 @@ module.exports = {
   refreshToken,
   logout,
   changePassword,
+  forgotPassword,
 };

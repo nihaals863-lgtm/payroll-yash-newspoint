@@ -9,6 +9,7 @@ router.post('/register', validateRegister, authController.register); // Enabled 
 router.post('/login', validateLogin, authController.login);
 router.post('/admin/login', validateLogin, authController.adminLogin);
 router.post('/refresh-token', validateRefreshToken, authController.refreshToken);
+router.post('/forgot-password', authController.forgotPassword);
 
 // Protected route
 router.post('/logout', authenticate, authController.logout);
