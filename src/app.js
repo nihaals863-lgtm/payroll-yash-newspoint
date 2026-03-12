@@ -20,26 +20,34 @@ const profileRoutes = require('./routes/profile.routes');
 const app = express();
 // Force restart timestamp: Request Refactor Complete
 
-// Middlewares
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
 
-    const allowedOrigins = Array.isArray(env.cors.origin)
-      ? env.cors.origin
-      : [env.cors.origin];
+    const allowedOrigins = [
+      "http://newsouthpoint.com",
+      "https://newsouthpoint.com",
+      "http://www.newsouthpoint.com",
+      "https://www.newsouthpoint.com"
+    ];
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Dev hack: allow all for now if errors persist
+      callback(new Error("CORS not allowed"));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
+
+app.options('*', cors());
+
+
+// Middlewares
+
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
