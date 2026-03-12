@@ -21,16 +21,17 @@ const app = express();
 // Force restart timestamp: Request Refactor Complete
 
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
 
-    const allowedOrigins = [
-      "http://newsouthpoint.com",
-      "https://newsouthpoint.com",
-      "http://www.newsouthpoint.com",
-      "https://www.newsouthpoint.com"
-    ];
+const allowedOrigins = [
+  "http://newsouthpoint.com",
+  "https://newsouthpoint.com",
+  "http://www.newsouthpoint.com",
+  "https://www.newsouthpoint.com"
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -41,9 +42,10 @@ app.use(cors({
   credentials: true,
   methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
-}));
+};
 
-app.options('*', cors());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 
 // Middlewares
