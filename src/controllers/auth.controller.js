@@ -78,7 +78,7 @@ const register = async (req, res, next) => {
       await connection.query(
         `INSERT INTO job_seekers (user_id, name, email, phone, status, created_at, updated_at)
          VALUES (?, ?, ?, ?, 'active', NOW(), NOW())`,
-        [userId, name, email, phone]
+        [userId, name, email, phone || null]
       );
     }
 

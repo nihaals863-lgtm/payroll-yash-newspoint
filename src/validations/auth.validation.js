@@ -15,6 +15,7 @@ const registerSchema = Joi.object({
     'string.min': 'Password must be at least 6 characters',
   }),
   role: Joi.string().valid('superadmin', 'admin', 'employer', 'employee', 'vendor', 'jobseeker').optional(),
+  phone: Joi.string().optional().allow('', null),
 });
 
 const loginSchema = Joi.object({
