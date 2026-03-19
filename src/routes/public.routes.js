@@ -13,6 +13,7 @@ router.get('/plans', publicController.getActivePlans);
 
 // Company signup request
 router.post('/company-request', publicController.createCompanyRequest);
+router.put('/company-request/:id/payment-status', publicController.updateCompanyRequestPaymentStatus);
 
 // User registration request
 router.post('/user-request', publicController.createRequest);

@@ -163,6 +163,59 @@ const createCompanyRequest = async (req, res, next) => {
 };
 
 /**
+ * Update Company Request Payment Status (Publicly called after payment success)
+ */
+const updateCompanyRequestPaymentStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { payment_status, paypal_order_id } = req.body;
+
+    if (payment_status !== 'paid') {
+      return res.status(400).json({ success: false, message: 'Only paid status can be confirmed.' });
+    }
+
+    const [rows] = await db.query('SELECT * FROM company_requests WHERE id = ?', [id]);
+    const companyRequest = rows[0];
+
+    if (!companyRequest) {
+      return res.status(404).json({ success: false, message: 'Request not found.' });
+    }
+
+    if (companyRequest.payment_status === 'paid') {
+      return res.json({ success: true, message: 'Payment already updated.', data: { id: companyRequest.id, payment_status: 'paid' } });
+    }
+
+    await db.query('UPDATE company_requests SET payment_status = ?, notes = ? WHERE id = ?', [
+      'paid',
+      paypal_order_id ? `${companyRequest.notes || ''} [PayPal: ${paypal_order_id}]`.trim() : companyRequest.notes,
+      id
+    ]);
+
+    // If request was already accepted but payment was pending, try to activate subscription if company exists
+    if (companyRequest.request_status === 'accepted' && companyRequest.created_company_id) {
+      await db.query(
+        'UPDATE subscriptions SET status = ? WHERE employer_id = ? AND status = ?',
+        ['active', companyRequest.created_company_id, 'pending']
+      );
+      // Also update invoices if any
+      await db.query(
+        "UPDATE invoices SET status = 'paid' WHERE employer_id = ? AND status = 'pending' AND (plan_id = ? OR 1=1)",
+        [companyRequest.created_company_id, companyRequest.plan_id]
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Payment status updated successfully.',
+      data: {
+        id: companyRequest.id,
+        payment_status: 'paid',
+      },
+    });
+  } catch (error) { next(error); }
+};
+
+/**
  * Create User Request (Public)
  */
 const createRequest = async (req, res, next) => {
@@ -204,5 +257,6 @@ module.exports = {
   getJobById,
   getActivePlans,
   createCompanyRequest,
+  updateCompanyRequestPaymentStatus,
   createRequest
 };
